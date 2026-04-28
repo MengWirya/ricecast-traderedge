@@ -1,0 +1,25 @@
+# Environment
+.env
+local.settings.json
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Data — raw files never committed (too large, may contain sensitive info)
+data/raw/
+data/processed/
+
+# Model artifact — large binary
+models/prophet_model.pkl
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Azure
+.azure/
