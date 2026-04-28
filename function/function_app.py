@@ -101,11 +101,11 @@ def _build_future_df(model, cache_df, horizon_days: int) -> pd.DataFrame:
     }
     for col, default in defaults.items():
         if col not in future.columns:
-            if isinstance(default, pd.Series):
-                future[col] = default.values if len(default) == len(future) else 0
-            else:
-                future[col] = default
-        future[col] = future[col].fillna(default.values[0] if isinstance(default, pd.Series) else default)
+            future[col] = default
+        if isinstance(default, pd.Series):
+            future[col] = future[col].fillna(pd.Series(default.values, index=future.index))
+        else:
+            future[col] = future[col].fillna(default)
     return future
 
 
