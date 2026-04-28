@@ -1,44 +1,43 @@
-# PROMPT 01 — Project Setup & Environment
+# PROMPT 01 â€” Project Setup, Context, and Data Pipeline Overview
 
-You are helping me build **RiceCast TraderEdge**, an AI-powered supply pressure
-detector for UMKM rice traders at pasar induk (wholesale markets) in Malang,
-East Java, Indonesia.
+> Read `00_PROJECT_CONTEXT.md` first. This file combines the project scaffold, environment setup, and high-level data pipeline context into one coherent reference.
 
-This is the **first step**: scaffold the full project structure, create all
-configuration files, and set up the Python environment.
+## What this file contains
+- Project purpose, user story, and core output
+- Folder structure and file layout
+- Development and Azure Function requirements
+- Environment variables and Azure config
+- Git ignore policy
+- Model card template
+- Data source summary and model design
+- Supply pressure scoring logic
+- Key project constraints and acceptance criteria
 
 ---
 
-## Your task
+## Step 1 â€” Create folder structure
 
-Create the complete project scaffold exactly as specified below.
-Do not skip any file. Generate the actual file content, not placeholders.
-
----
-
-## Step 1 — Create folder structure
-
-Create the following directory tree from scratch:
+Create the following directory tree:
 
 ```
 ricecast-traderedge/
-├── notebooks/
-├── function/
-├── dashboard/
-│   └── components/
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── sample/
-├── models/
-└── tests/
+â”œâ”€â”€ notebooks/
+â”œâ”€â”€ function/
+â”œâ”€â”€ dashboard/
+â”‚   â””â”€â”€ components/
+â”œâ”€â”€ data/
+â”‚   â”œâ”€â”€ raw/
+â”‚   â”œâ”€â”€ processed/
+â”‚   â””â”€â”€ sample/
+â”œâ”€â”€ models/
+â””â”€â”€ tests/
 ```
 
 ---
 
-## Step 2 — Create `requirements-dev.txt`
+## Step 2 â€” requirements-dev.txt
 
-This is for local development (notebooks + testing). Generate this file:
+Create `requirements-dev.txt` with exact pinned dependencies:
 
 ```
 # Core model
@@ -76,10 +75,9 @@ ipykernel==6.29.4
 
 ---
 
-## Step 3 — Create `function/requirements.txt`
+## Step 3 â€” function/requirements.txt
 
-This is the slimmed-down requirements for the Azure Function only (no notebook
-extras, no dev tools):
+Create `function/requirements.txt` with the slim production runtime dependencies:
 
 ```
 prophet==1.1.5
@@ -94,9 +92,9 @@ python-dotenv==1.0.1
 
 ---
 
-## Step 4 — Create `function/host.json`
+## Step 4 â€” Azure Functions config
 
-Standard Azure Functions v2 host configuration:
+Create `function/host.json`:
 
 ```json
 {
@@ -116,11 +114,7 @@ Standard Azure Functions v2 host configuration:
 }
 ```
 
----
-
-## Step 5 — Create `function/local.settings.json`
-
-Local dev only — **never commit this file**:
+Create `function/local.settings.json` for local development only:
 
 ```json
 {
@@ -137,9 +131,9 @@ Local dev only — **never commit this file**:
 
 ---
 
-## Step 6 — Create `.env.example`
+## Step 5 â€” .env.example
 
-Template for environment variables (commit this, not the real `.env`):
+Create `.env.example`:
 
 ```
 # Azure Blob Storage
@@ -147,13 +141,15 @@ BLOB_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...
 BLOB_CONTAINER_NAME=ricecast
 MODEL_BLOB_NAME=prophet_model.pkl
 
-# Dashboard → Function URL
+# Dashboard â†’ Function URL
 FUNCTION_ENDPOINT=https://your-function-app.azurewebsites.net/api/forecast
 ```
 
 ---
 
-## Step 7 — Create `.gitignore`
+## Step 6 â€” .gitignore
+
+Ignore local environment files, data, and large models:
 
 ```
 # Environment
@@ -165,11 +161,11 @@ __pycache__/
 .venv/
 venv/
 
-# Data — raw files never committed (too large, may contain sensitive info)
+# Data â€” raw files never committed (too large, may contain sensitive info)
 data/raw/
 data/processed/
 
-# Model artifact — large binary
+# Model artifact â€” large binary
 models/prophet_model.pkl
 
 # Jupyter checkpoints
@@ -185,12 +181,12 @@ Thumbs.db
 
 ---
 
-## Step 8 — Create `models/model_card.md`
+## Step 7 â€” models/model_card.md template
 
-Blank template to fill in after training:
+Create `models/model_card.md`:
 
 ```markdown
-# RiceCast TraderEdge — Model Card
+# RiceCast TraderEdge â€” Model Card
 
 ## Model details
 - **Type:** Facebook Prophet (multiplicative seasonality)
@@ -198,96 +194,100 @@ Blank template to fill in after training:
 - **Trained:** (date)
 - **Training data:** (date range and sources)
 
-## Features
-| Feature | Type | Prior scale | Description |
-|---------|------|-------------|-------------|
-| price_mom_3m | Continuous | 0.5 | 3-month price % change |
-| price_accel | Continuous | 0.3 | Momentum acceleration |
-| harvest_window | Binary | 0.4 | East Java harvest season |
-| production_dev_pct | Continuous | 0.3 | BPS monthly production deviation |
-| rainfall_dev_pct | Continuous | 0.02 | BMKG rainfall deviation (downweighted) |
+## Validation summary
+- **Holdout directional accuracy:**
+- **MAE:**
+- **MAPE:**
 
-## Training parameters
-- seasonality_mode: multiplicative
-- yearly_seasonality: True (10 Fourier terms)
-- weekly_seasonality: False
-- changepoint_prior_scale: 0.05
-- interval_width: 0.80
-
-## Validation results
-- Training period: (fill)
-- Holdout period: (fill)
-- Directional accuracy: (fill)%
-- Key backtest events:
-  - Post-harvest glut Q2 2022: signal (X) weeks before peak
-  - El Niño shortage Q3 2023: signal (X) weeks before peak
-
-## Known limitations
-- Monthly resolution only
-- East Java / Malang focus — not generalisable
-- Production feature uses provincial data, not regency-level
-- Historical patterns may not capture structural market changes
+## Notes
+- Forecast is directional only, not exact price prediction.
+- Model is valid for Jawa Timur rice market only.
+- All user-facing text is in Bahasa Indonesia.
 ```
 
 ---
 
-## Step 9 — Create empty notebook files
+## Project context and tech stack
 
-Create these four empty `.ipynb` files in the `notebooks/` folder.
-Each should be a valid empty Jupyter notebook (just the minimal JSON skeleton):
+RiceCast TraderEdge is an AI-powered supply pressure detector for UMKM rice traders at Pasar Induk Gadang Malang. It is intended to provide a structured signal, not an exact price prediction.
 
-- `notebooks/01_eda.ipynb`
-- `notebooks/02_feature_engineering.ipynb`
-- `notebooks/03_model_training.ipynb`
-- `notebooks/04_backtest_analysis.ipynb`
+### Core output
 
-Minimal notebook JSON:
-```json
-{
- "cells": [],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": { "name": "python", "version": "3.11.0" }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+A structured signal containing:
+- `dominant_signal`: `GLUT` | `SHORTAGE` | `NEUTRAL`
+- `intensity`: `HIGH` | `MEDIUM` | `LOW`
+- `trader_action`: Bahasa Indonesia advice
+- `confidence_days`: 7â€“30
+- `forecast_values`, `ci_lower`, `ci_upper`
+
+### Tech stack
+
+| Layer | Technology | Why |
+|---|---|---|
+| Forecasting model | Facebook Prophet (Python) | Interpretable, fits monthly rice price seasonality |
+| Backend | Azure Functions (Python) | HTTP trigger, lightweight deployment |
+| Model storage | Azure Blob Storage | Stores `prophet_model.pkl` and feature cache |
+| Frontend | Streamlit | Fast dashboard, deployable to Azure App Service |
+| Language | Python 3.11 | |
+
+### Data sources
+
+| Dataset | Role | Source |
+|---|---|---|
+| WFP Indonesia Food Prices | Primary price series | HDX / humdata.org |
+| PIHPS Malang | Malang rice price supplement | bi.go.id |
+| BPS monthly production | Supply deviation feature | bps.go.id |
+| BMKG rainfall | Supporting weather regressor | dataonline.bmkg.go.id |
+
+### Prophet model design
+
+Use Prophet with:
+- `seasonality_mode='multiplicative'`
+- `yearly_seasonality=True`
+- `weekly_seasonality=False`
+- `daily_seasonality=False`
+- `changepoint_prior_scale=0.05`
+- `interval_width=0.80`
+
+Regressors:
+- `production_dev_pct`
+- `price_mom_3m`
+- `price_accel`
+- `harvest_window`
+- `rainfall_dev_pct`
+
+### Supply pressure scoring logic
+
+The scoring module should produce:
+- `glut_score` â€” price decline + harvest proximity
+- `shortage_score` â€” price rise + lean season
+- `dominant_signal` â€” the higher score if above threshold, else `NEUTRAL`
+- `intensity` â€” `HIGH` / `MEDIUM` / `LOW`
+
+Example scoring rule:
+```python
+def compute_supply_pressure(...):
+    price_change_pct = (last_yhat - current_price) / current_price
+    glut_score = max(0, -price_change_pct * 300) + (25 if harvest_near else 0)
+    shortage_score = max(0, price_change_pct * 300) + (20 if lean_near else 0)
 ```
+
+### Key constraints
+
+- No managed Azure ML endpoints
+- No Azure OpenAI
+- No live scraping during demo
+- Do not expose exact price predictions to users
+- User-facing text in Bahasa Indonesia
+- Wide uncertainty intervals must be visible
 
 ---
 
-## Step 10 — Create Python virtual environment
+## Acceptance criteria
 
-Run these commands:
-
-```bash
-cd ricecast-traderedge
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install --upgrade pip
-pip install -r requirements-dev.txt
-```
-
-If `prophet` install fails (common on some systems), try:
-```bash
-pip install pystan==3.4.0
-pip install prophet==1.1.5
-```
-
----
-
-## Done — verification checklist
-
-After completing all steps, run:
-```bash
-python -c "import prophet; import pandas; import streamlit; print('All core imports OK')"
-pytest --collect-only   # should show 0 tests collected (empty tests/ dir)
-```
-
-Both commands should run without errors.
-
-Report back with the output of these two commands.
+- Project scaffold exists exactly as specified
+- `requirements-dev.txt` and `function/requirements.txt` are pinned correctly
+- Azure config files are present and local-only values are ignored in git
+- Model card template is created
+- Project context and data source expectations are documented clearly
+- All high-level constraints are stated explicitly
