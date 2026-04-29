@@ -1,131 +1,88 @@
-"""
-supply_pressure_scorer.py
-
-Converts a Prophet forecast dataframe into a supply pressure assessment
-for UMKM rice traders at pasar induk level.
-
-No LLM calls. No external APIs. Pure Python + pandas + numpy.
-"""
-
+# =============================================================================
+# function/supply_pressure_scorer.py
+# Converts Prophet forecast output → supply pressure signal dict.
+# Mirrors the scoring logic used in the backtest notebook exactly.
+# =============================================================================
+ 
 import pandas as pd
-import numpy as np
-from typing import Dict
-
-INTENSITY_THRESHOLDS = {
-    'HIGH': 70,
-    'MEDIUM': 40,
-}
-
-
-def score_to_intensity(score: float) -> str:
-    if score >= INTENSITY_THRESHOLDS['HIGH']:
-        return 'HIGH'
-    elif score >= INTENSITY_THRESHOLDS['MEDIUM']:
-        return 'MEDIUM'
-    return 'LOW'
-
-
-def _compute_glut_score(
-    price_change_pct: float,
-    harvest_window_sum: int,
-    production_dev_mean: float,
-    ci_width_pct: float,
-) -> float:
-    score = 0.0
-    if price_change_pct < 0:
-        score += min(50, abs(price_change_pct) * 300)
-    if harvest_window_sum >= 2:
-        score += 20
-    elif harvest_window_sum == 1:
-        score += 10
-    if production_dev_mean > 0.10:
-        score += 20
-    elif production_dev_mean > 0.05:
-        score += 10
-    if ci_width_pct > 0.20:
-        score *= 0.85
-    return min(100.0, score)
-
-
-def _compute_shortage_score(
-    price_change_pct: float,
-    lean_season_sum: int,
-    production_dev_mean: float,
-    rainfall_dev_mean: float,
-    ci_width_pct: float,
-) -> float:
-    score = 0.0
-    if price_change_pct > 0:
-        score += min(50, abs(price_change_pct) * 300)
-    if lean_season_sum >= 2:
-        score += 20
-    elif lean_season_sum == 1:
-        score += 10
-    if production_dev_mean < -0.10:
-        score += 20
-    elif production_dev_mean < -0.05:
-        score += 10
-    if rainfall_dev_mean < -0.25:
-        score += 10
-    elif rainfall_dev_mean < -0.10:
-        score += 5
-    if ci_width_pct > 0.20:
-        score *= 0.85
-    return min(100.0, score)
-
-
+ 
+ 
 def compute_supply_pressure(
     forecast_df: pd.DataFrame,
     current_price: float,
-    horizon_days: int = 30,
-) -> Dict:
-    future_fc = forecast_df.tail(max(1, horizon_days // 30))
-    if len(future_fc) == 0:
-        future_fc = forecast_df.tail(1)
-    yhat_mean = future_fc['yhat'].mean()
-    yhat_lower_mean = future_fc['yhat_lower'].mean()
-    yhat_upper_mean = future_fc['yhat_upper'].mean()
-    price_change_pct = (yhat_mean - current_price) / current_price
-    ci_width_pct = (yhat_upper_mean - yhat_lower_mean) / current_price
-    harvest_window_sum = int(future_fc.get('harvest_window', pd.Series([0])).sum())
-    lean_season_sum = int(future_fc.get('lean_season', pd.Series([0])).sum())
-    production_dev_mean = float(future_fc.get('production_dev_pct', pd.Series([0.0])).mean())
-    rainfall_dev_mean = float(future_fc.get('rainfall_dev_pct', pd.Series([0.0])).mean())
-    glut_score = _compute_glut_score(
-        price_change_pct, harvest_window_sum, production_dev_mean, ci_width_pct
+) -> dict:
+    """
+    Parameters:
+        forecast_df   : Prophet .predict() output — future-only slice (next N months)
+        current_price : Latest actual price (IDR/kg) from PIHPS/master_df
+ 
+    Returns full signal dict consumed by function_app.py and the dashboard.
+    """
+    if len(forecast_df) == 0 or current_price <= 0:
+        return _neutral_signal()
+ 
+    last_yhat        = float(forecast_df["yhat"].iloc[-1])
+    price_change_pct = (last_yhat - current_price) / current_price
+ 
+    # Seasonal context from forecast dates
+    future_months = forecast_df["ds"].dt.month
+    harvest_near  = int(future_months.isin([3, 4, 5, 7, 8, 9]).sum() >= 2)
+    lean_near     = int(future_months.isin([10, 11, 12, 1, 2]).sum() >= 2)
+ 
+    # CI width as uncertainty measure (% of current price)
+    ci_width_pct = float(
+        ((forecast_df["yhat_upper"] - forecast_df["yhat_lower"]) / current_price)
+        .mean() * 100
     )
-    shortage_score = _compute_shortage_score(
-        price_change_pct,
-        lean_season_sum,
-        production_dev_mean,
-        rainfall_dev_mean,
-        ci_width_pct,
-    )
-    if glut_score > shortage_score and glut_score >= INTENSITY_THRESHOLDS['MEDIUM']:
-        dominant_signal = 'GLUT'
-        active_score = glut_score
-    elif shortage_score > glut_score and shortage_score >= INTENSITY_THRESHOLDS['MEDIUM']:
-        dominant_signal = 'SHORTAGE'
-        active_score = shortage_score
+ 
+    # ── Glut score ────────────────────────────────────────────────────────
+    # High when: price falling + harvest season approaching
+    glut_score  = max(0.0, -price_change_pct * 300)
+    glut_score += 25 if harvest_near else 0
+    glut_score  = min(100.0, round(glut_score, 1))
+ 
+    # ── Shortage score ────────────────────────────────────────────────────
+    # High when: price rising + lean season approaching
+    shortage_score  = max(0.0, price_change_pct * 300)
+    shortage_score += 20 if lean_near else 0
+    shortage_score  = min(100.0, round(shortage_score, 1))
+ 
+    # ── Dominant signal ───────────────────────────────────────────────────
+    if glut_score > shortage_score and glut_score >= 20:
+        dominant = "GLUT"
+    elif shortage_score > glut_score and shortage_score >= 20:
+        dominant = "SHORTAGE"
     else:
-        dominant_signal = 'NEUTRAL'
-        active_score = max(glut_score, shortage_score)
-    intensity = score_to_intensity(active_score)
-    feature_contributions = {
-        'price_momentum': abs(price_change_pct) * 300,
-        'harvest_timing': harvest_window_sum * 10,
-        'production_signal': abs(production_dev_mean) * 100,
-        'rainfall_deficit': max(0.0, -rainfall_dev_mean) * 30,
-    }
-    top_feature = max(feature_contributions, key=feature_contributions.get)
+        dominant = "NEUTRAL"
+ 
+    # ── Intensity ─────────────────────────────────────────────────────────
+    peak      = max(glut_score, shortage_score)
+    intensity = "HIGH" if peak >= 70 else "MEDIUM" if peak >= 40 else "LOW"
+ 
     return {
-        'glut_score': round(glut_score),
-        'shortage_score': round(shortage_score),
-        'dominant_signal': dominant_signal,
-        'intensity': intensity,
-        'price_change_pct': round(price_change_pct * 100, 1),
-        'ci_width_pct': round(ci_width_pct * 100, 1),
-        'yhat_mean': round(yhat_mean),
-        'top_driving_feature': top_feature,
-        'driving_features': {k: round(v) for k, v in feature_contributions.items()},
+        "dominant_signal":  dominant,
+        "intensity":        intensity,
+        "glut_score":       int(glut_score),
+        "shortage_score":   int(shortage_score),
+        "ci_width_pct":     round(ci_width_pct, 1),
+        "price_change_pct": round(price_change_pct * 100, 1),
+        "forecast_values":  forecast_df["yhat"].round(0).astype(int).tolist(),
+        "ci_lower":         forecast_df["yhat_lower"].round(0).astype(int).tolist(),
+        "ci_upper":         forecast_df["yhat_upper"].round(0).astype(int).tolist(),
+        "forecast_dates":   forecast_df["ds"].dt.strftime("%Y-%m-%d").tolist(),
+    }
+ 
+ 
+def _neutral_signal() -> dict:
+    return {
+        "dominant_signal":  "NEUTRAL",
+        "intensity":        "LOW",
+        "glut_score":       0,
+        "shortage_score":   0,
+        "ci_width_pct":     0.0,
+        "price_change_pct": 0.0,
+        "forecast_values":  [],
+        "ci_lower":         [],
+        "ci_upper":         [],
+        "forecast_dates":   [],
     }
