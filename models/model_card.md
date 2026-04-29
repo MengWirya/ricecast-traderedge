@@ -1,37 +1,49 @@
-# RiceCast TraderEdge — Model Card
+# Model Card — prophet_model.pkl
 
-## Model details
-- **Type:** Facebook Prophet (multiplicative seasonality)
-- **Version:** (fill after training)
-- **Trained:** (date)
-- **Training data:** (date range and sources)
+## Model overview
+- Type: Facebook Prophet (time-series forecasting)
+- Task: Supply pressure signal for rice traders, Pasar Induk Malang, Jawa Timur
+- Seasonality mode: **additive** (selected based on EDA — seasonal factor range 0.041)
+- Interval width: 80% confidence interval
+
+## Training data
+- Period: 2016-10-01 → 2023-12-01
+- Rows: 52 monthly observations
+- Source: WFP/HDX Indonesia Food Prices (Jawa Timur rice series)
 
 ## Features
-| Feature | Type | Prior scale | Description |
-|---------|------|-------------|-------------|
-| price_mom_3m | Continuous | 0.5 | 3-month price % change |
-| price_accel | Continuous | 0.3 | Momentum acceleration |
-| harvest_window | Binary | 0.4 | East Java harvest season |
-| production_dev_pct | Continuous | 0.3 | Supply deviation from seasonal norm |
-| rainfall_dev_pct | Continuous | 0.02 | BMKG rainfall deviation (downweighted) |
-
-## Training parameters
-- seasonality_mode: multiplicative
-- yearly_seasonality: True (10 Fourier terms)
-- weekly_seasonality: False
-- changepoint_prior_scale: 0.05
-- interval_width: 0.80
+| Feature | Prior scale | Role |
+|---|---|---|
+| production_dev_pct | 0.5 | Primary supply signal (IEEE 2018-2023 + BPS 2025-2026) |
+| price_mom_3m | 0.5 | 3-month price momentum |
+| price_accel | 0.3 | Momentum acceleration |
+| harvest_window | 0.4 | East Java harvest season binary |
+| rainfall_dev_pct | 0.02 | Supporting only (downweighted) |
 
 ## Validation results
-- Training period: (fill)
-- Holdout period: (fill)
-- Directional accuracy: (fill)%
-- Key backtest events:
-  - Post-harvest glut Q2 2022: signal (X) weeks before peak
-  - El Niño shortage Q3 2023: signal (X) weeks before peak
+- Directional accuracy (holdout): 70.8%
+- MAE: Rp 10,810/kg
+- MAPE: 76.0%
+
+## Backtest results
+- Post-Panen Glut Q2 2022: lead time = 0 weeks
+- El Niño Shortage Q3 2023: lead time = 0 weeks
 
 ## Known limitations
-- Monthly resolution only
-- East Java / Malang focus — not generalisable
-- Production feature uses provincial data, not regency-level
-- Historical patterns may not capture structural market changes
+1. Monthly data resolution — sub-monthly timing cannot be detected
+2. 2024 production data is gap-filled using 5-year harvest weight average
+3. Rainfall feature is annual → monthly distributed (not station-level daily)
+4. Confidence intervals span ±10-25% of price level — directional signal only
+5. Model calibrated to Jawa Timur — do not apply to other provinces without retraining
+6. Seasonality mode changed to additive (EDA finding: seasonal factor range 0.041 < 0.05)
+
+## Output interpretation
+Post-processed to GLUT/SHORTAGE/NEUTRAL signal + HIGH/MEDIUM/LOW intensity.
+Do NOT expose raw yhat as a precise price prediction.
+Designed for pasar induk wholesale traders in Malang area only.
+
+## Files
+- prophet_model.pkl — serialized model (joblib)
+- forecast_plot.png — full forecast visualization
+- components_plot.png — trend + seasonality decomposition
+- backtest_chart.png — hero backtest visualization
