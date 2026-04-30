@@ -114,11 +114,11 @@ Alih-alih memprediksi harga secara absolut, sistem ini:
 
 📸 Screenshot
 
-> *(Tambahkan gambar di sini)*
+> *Coming soon*
 
 🎥 Demo Video
 
-> *(Tambahkan link video di sini)*
+> *Coming soon*
 
 ---
 
