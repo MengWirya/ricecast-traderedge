@@ -235,7 +235,7 @@ Planned:
 
 ## Contributors
 
-* *(Your Name / Team Name)*
+* *Hello*
 
 ---
 
