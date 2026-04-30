@@ -1,254 +1,173 @@
 # RiceCast TraderEdge
 
-AI-powered **decision support tool** for rice traders at pasar induk.
+Machine Learning Decision Support untuk Stabilitas Pasokan & Harga Beras
 
 ---
 
-## What this project does
-
-RiceCast TraderEdge helps rice traders answer one simple question:
-
-> **Should I buy, hold, or sell rice stock right now?**
-
-Instead of predicting exact prices, this system analyzes:
-
-* market prices
-* production levels
-* rainfall patterns
-* seasonal harvest cycles
-
-and outputs a **Supply Signal** that indicates whether the market is likely entering:
-
-* **Surplus (prices likely to go down)**
-* **Shortage (prices likely to go up)**
-* **Neutral**
+![Status](https://img.shields.io/badge/status-in%20development-yellow)
+![Tech](https://img.shields.io/badge/tech-ML%20%7C%20Streamlit%20%7C%20Python-blue)
 
 ---
 
-## Why this matters
+## Ringkasan Eksekutif
 
-Rice traders operate with thin margins and high uncertainty.
+Ketahanan pangan di Indonesia sangat dipengaruhi oleh stabilitas harga dan distribusi beras. Namun, pelaku utama di lapangan seperti pedagang pasar induk sering kali mengambil keputusan tanpa dukungan data yang memadai, terutama dalam menghadapi fluktuasi produksi, cuaca, dan pola musiman.
 
-A wrong decision can lead to:
+Data BPS menunjukkan bahwa produksi padi bersifat musiman, sementara BMKG menunjukkan variabilitas curah hujan yang tinggi. Ketidakseimbangan ini sering menyebabkan kondisi **surplus atau kekurangan pasokan**, yang berdampak langsung pada harga di pasar.
 
-* overstock during price drops
-* missed profit during shortages
+**Problem Statement:**
+Bagaimana membantu pedagang beras mengambil keputusan pembelian dan penjualan secara tepat berdasarkan kondisi pasokan yang dinamis?
 
-This tool provides **early signals (7–30 days ahead)** to support better decisions.
+**Research Questions:**
 
----
+* Bagaimana produksi dan cuaca mempengaruhi harga beras?
+* Bisakah kita mendeteksi surplus/kekurangan lebih awal?
+* Bagaimana mengubah data kompleks menjadi keputusan sederhana?
 
-## Key Features
+**Solusi:**
+RiceCast TraderEdge menggunakan pendekatan **Machine Learning berbasis time-series dan feature engineering** untuk mendeteksi **Supply Pressure** dan menerjemahkannya menjadi sinyal sederhana:
 
-### 1. Decision-First Signal
-
-Clear, actionable output:
-
-* BUY / HOLD / SELL guidance
-* No technical interpretation required
+> **BELI — TAHAN — JUAL**
 
 ---
 
-### 2. Supply Pressure Detection
+## Deskripsi Proyek
 
-Detects imbalance using:
+**RiceCast TraderEdge** adalah platform berbasis Machine Learning yang membantu pedagang beras memahami arah pasar dalam 7–30 hari ke depan.
 
-* production deviation (BPS)
-* rainfall anomaly (BMKG)
-* historical price patterns (WFP / PIHPS)
+Alih-alih memprediksi harga secara absolut, sistem ini:
 
----
+* Mendeteksi kondisi **surplus / shortage**
+* Memberikan **rekomendasi tindakan langsung**
+* Menjelaskan **alasan berbasis data**
 
-### 3. Explainable AI
-
-Every signal includes reasons, for example:
-
-* “Produksi naik +15% dari normal”
-* “Sedang musim panen”
-* “Curah hujan stabil”
+🎯 Fokus utama: **membantu pengambilan keputusan, bukan sekadar analisis**
 
 ---
 
-### 4. Price Context (Supporting Only)
+## Fitur Utama & Teknologi
 
-* Historical price trends
-* Short-term projection (NOT the main output)
+### Fitur Utama
 
----
+* 📊 **Sinyal Keputusan Langsung**
 
-## Example Output
+  * Output: BELI / TAHAN / JUAL
 
-> 🔴 **SURPLUS — TINGGI**
-> Harga kemungkinan turun dalam 2–3 minggu ke depan
+* ⚖️ **Supply Pressure Detection**
 
-**Rekomendasi:**
+  * Klasifikasi kondisi pasar:
 
-* Tunda pembelian stok besar
-* Negosiasi harga supplier
-* Jual stok lama sebelum harga turun
+    * Surplus
+    * Netral
+    * Shortage
 
----
+* 🔍 **Explainable Insight**
 
-## Data Sources
+  * Contoh:
 
-* WFP Food Prices (Indonesia)
-* BPS (Produksi Padi Bulanan)
-* BMKG (Curah Hujan)
-* PIHPS (Harga Pasar Lokal)
+    * Produksi naik +15%
+    * Musim panen aktif
+    * Curah hujan stabil
 
-> ⚠️ All data used is publicly available and non-copyright restricted.
+* 📈 **Visualisasi Harga (Pendukung)**
 
----
-
-## Project Structure
-
-```
-data/
-  raw/
-  processed/
-
-notebooks/
-  01_data_cleaning.ipynb
-  02_feature_engineering.ipynb
-  03_modeling.ipynb
-  04_insight_analysis.ipynb
-
-app/
-  streamlit_app.py
-
-models/
-  (to be added)
-
-outputs/
-  signals/
-```
+  * Tren historis
+  * Proyeksi jangka pendek
 
 ---
 
-## Methodology (Simplified)
+### Teknologi yang Digunakan
 
-1. Collect multi-source data (price, production, weather)
-2. Convert to monthly time series
-3. Create features:
+* **Python (Pandas, NumPy)**
+* **Prophet (Time-Series Forecasting)**
+* **Streamlit (Web App)**
+* **Dataset:**
 
-   * seasonal indicators
-   * deviation metrics
-4. Generate **Supply Pressure Score**
-5. Translate score → actionable signal
+  * WFP
+  * BPS
+  * BMKG
+  * PIHPS
 
----
-
-## Model
-
-🚧 *Currently in development*
-
-Current approach:
-
-* Time series modeling (Prophet)
-* Feature-based signal generation
-
-Planned improvements:
-
-* Better supply-demand modeling
-* More robust signal classification
-* Improved uncertainty estimation
+* Azure Functions
+* Azure Machine Learning
 
 ---
 
-## Limitations
+## Cara Penggunaan Website
 
-* Signal is **indicative**, not a guaranteed prediction
-* Data availability may affect accuracy
-* Model currently relies on historical patterns
+1. Buka dashboard TraderEdge
+2. Atur horizon prediksi (bulan)
+3. Klik **Perbarui Sinyal**
+4. Perhatikan output utama:
+
+   * Status pasar
+   * Rekomendasi tindakan
+5. Gunakan untuk:
+
+   * Menentukan waktu pembelian
+   * Menjual stok lama
+   * Negosiasi harga
 
 ---
 
-## Demo
+## Preview Produk
 
-📸 Screenshot: *(add later)*
-🎥 Video demo: *(add later)*
+📸 Screenshot
+
+> *(Tambahkan gambar di sini)*
+
+🎥 Demo Video
+
+> *(Tambahkan link video di sini)*
 
 ---
 
-## How to Run
+## Studi Kasus Pengguna
 
-```bash
-pip install -r requirements.txt
-streamlit run app/streamlit_app.py
-```
+**Skenario: Pedagang Pasar Induk Malang**
+
+| Kondisi      | Tanpa Sistem | Dengan TraderEdge        |
+| ------------ | ------------ | ------------------------ |
+| Saat surplus | Tetap beli   | Menunda pembelian        |
+| Harga turun  | Rugi stok    | Sudah menjual lebih awal |
+| Keputusan    | Intuisi      | Berbasis data            |
 
 ---
 
 ## Roadmap
 
-### Short Term
-
-* Improve signal clarity (BUY / HOLD / SELL)
-* Enhance explanation layer
-* Clean UI for real users
-
-### Mid Term
-
-* Add real-time data updates
-* Improve model robustness
-* Backtesting & evaluation
-
-### Long Term
-
-* Mobile-friendly interface
-* Integration with market data APIs
-* Personalized trader recommendations
+* [ ] Memperbaiki deploy
 
 ---
 
-## Target Users
+## Tim & Kontributor
 
-* Pedagang beras (pasar induk)
-* Distributor beras
-* Small-scale supply chain decision makers
+👥 Tim Pengembang
 
----
-
-## Competition Context
-
-Built for:
-**Datathon AI Challenge (Microsoft Elevate Training Center)**
-
-Requirements fulfilled:
-
-* AI-based solution
-* Uses public datasets
-* Deployable digital product
-* Ready for Azure integration
+* [Mengwirya - Wiryateja Pamungkas](https://github.com/mengwirya)
+* [Mavenhay - Maven Helios Agathon Yesstian](https://github.com/mavenhay)
+* [Saktizaman-wq - Sakti Mahayana Zaman](https://github.com/saktizaman-wq)
 
 ---
 
-## Future Azure Integration
+### 🔗 Kontributor Repository
 
-Planned:
-
-* Azure Functions → signal generation API
-* Azure Storage → dataset pipeline
-* Azure ML → model training & deployment
+[![Contributors](https://contrib.rocks/image?repo=USERNAME/REPO_NAME)](https://github.com/USERNAME/REPO_NAME/graphs/contributors)
 
 ---
 
-## Contributors
+## Dokumentasi & Link
 
-* *Hello*
-
----
-
-## License
-
-*(To be decided)*
+* 📂 GitHub Repo: *[(On Progress)](https://github.com/MengWirya/ricecast-traderedge)*
+* 🌐 Live Demo: *[(On Progress)](https://ricecast-dashboard-bhh9dvgnfqfmazfp.southeastasia-01.azurewebsites.net/)*
+* 🎥 Video Demo: *(On Progress)*
 
 ---
 
-## Final Note
+## Penutup
 
-This is not a price prediction tool.
+RiceCast TraderEdge dirancang sebagai **alat bantu keputusan nyata**, bukan sekadar eksperimen Machine Learning.
 
-This is a **decision support system** designed to reduce uncertainty and improve timing in rice trading.
+Dengan mengubah data kompleks menjadi sinyal sederhana, sistem ini membantu pelaku distribusi beras:
 
-> Simple signal. Real impact.
+> Mengurangi risiko, meningkatkan timing, dan mengambil keputusan lebih percaya diri.
