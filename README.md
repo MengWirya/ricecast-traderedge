@@ -1,6 +1,8 @@
 # RiceCast TraderEdge
 
 Machine Learning Decision Support untuk Stabilitas Pasokan & Harga Beras
+**Important: Projects currently around 80% done. Bug fixing still needed (Not fatal) and also user improvement is really needed**
+**If you're interested, Help me by contributing this repo! Every help will be remembered!**
 
 ---
 
